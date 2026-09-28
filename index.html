@@ -16,34 +16,31 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929f"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929f"></script>
-  <link href="css/app.1aedfee5.css?v=20260929f" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929g"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929g"></script>
+  <link href="css/app.1aedfee5.css?v=20260929g" rel="stylesheet">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <!-- 静态 loading：白色方块旋转，和原版一样 -->
+    <div class="preload-loading" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#171717;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:999999;">
+      <div style="width:60px;height:60px;background:#fff;animation:spin360 1s linear infinite;border-radius:4px;"></div>
+      <div style="color:#17f700;font-family:monospace;font-size:1rem;letter-spacing:.3rem;margin-top:1.5rem;">LOADING</div>
+    </div>
+  </div>
+  <style>
+    @keyframes spin360 { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+  </style>
 
 <script>
-// 首次加载：如果 Vue 在3秒内就把 loading 藏了，强制多留2秒让用户看到动画
-var startTime = Date.now();
-var mo = new MutationObserver(function() {
-  var l = document.querySelector('.loading');
-  if (!l) return;
-  var elapsed = Date.now() - startTime;
-  if (elapsed < 3000) {
-    // 前3秒内，不管 Vue 怎么改，强制 loading 显示
-    if (getComputedStyle(l).display === 'none') {
-      l.style.display = '';
-    }
-  } else {
-    mo.disconnect();
-  }
-});
-mo.observe(document.documentElement, {subtree:true, attributes:true, attributeFilter:['style','class']});
+// 3秒后移除静态loading，让Vue接管
+setTimeout(function() {
+  var p = document.querySelector('.preload-loading');
+  if (p) p.remove();
+}, 3000);
 
 // 8秒兜底
 setTimeout(function() {
-  mo.disconnect();
   var l = document.querySelector('.loading');
   if (l && getComputedStyle(l).display !== 'none') {
     l.style.display = 'none';
