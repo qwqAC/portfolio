@@ -18,6 +18,15 @@
   <div id="app"></div>
 
 <script>
+// 兜底：8秒后如果 loading 还在，强制隐藏（不干扰Vue正常转场）
+setTimeout(function() {
+  var l = document.querySelector('.loading');
+  if (l && getComputedStyle(l).display !== 'none') {
+    l.style.display = 'none';
+  }
+  document.body.style.overflow = 'auto';
+}, 8000);
+
 // 等动画加载后初始化叠加元素
 function initOverlays() {
   var container = document.querySelector('.contact_animation');
