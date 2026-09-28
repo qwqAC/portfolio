@@ -16,9 +16,9 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929o"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929o"></script>
-  <link href="css/app.1aedfee5.css?v=20260929o" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929q"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929q"></script>
+  <link href="css/app.1aedfee5.css?v=20260929q" rel="stylesheet">
 </head>
 <body>
   <div id="app"></div>
@@ -48,7 +48,7 @@ function initOverlays() {
   stickers.forEach(function(pos) {
     var bg = document.createElement('div');
     bg.className = 'my-sticker';
-    bg.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:'+pos.w+';height:'+pos.h+';background:#f7f7f7;z-index:149;transform:rotate('+pos.rotate+');';
+    bg.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:calc('+pos.w+' + 0.5%);height:calc('+pos.h+' + 0.5%);background:#f7f7f7;z-index:149;transform:rotate('+pos.rotate+');';
     container.appendChild(bg);
     var st = document.createElement('img');
     st.className = 'my-sticker';
