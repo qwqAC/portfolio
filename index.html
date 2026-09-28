@@ -31,22 +31,25 @@ if (location.protocol === 'file:') {
   }, 4000);
 }
 
-// 看门狗：转场 LOADING 最多显示 3 秒，避免卡住
-setInterval(function() {
+// 监听 loading：转场时看门狗 2.5 秒后自动淡出，淡出后清空所有内联样式
+var _loadTimer = null;
+new MutationObserver(function() {
   var l = document.querySelector('.loading');
   if (!l) return;
   var cs = getComputedStyle(l);
-  if (cs.display !== 'none' && parseFloat(cs.opacity) > 0.5) {
-    setTimeout(function() {
-      if (l && getComputedStyle(l).display !== 'none') {
-        l.style.transition = 'opacity 0.5s';
-        l.style.opacity = '0';
-        setTimeout(function(){ l.style.display = 'none'; }, 500);
+  if (cs.display === 'flex' && parseFloat(cs.opacity) > 0.5) {
+    if (_loadTimer) clearTimeout(_loadTimer);
+    _loadTimer = setTimeout(function() {
+      if (!l) return;
+      l.style.transition = 'opacity 0.6s';
+      l.style.opacity = '0';
+      setTimeout(function() {
+        if (l) { l.style.cssText = ''; }
         document.body.style.overflow = 'auto';
-      }
-    }, 3000);
+      }, 600);
+    }, 2500);
   }
-}, 1500);
+}).observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['style', 'class']});
 
 
 // 等动画加载后初始化叠加元素
