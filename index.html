@@ -16,9 +16,9 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929v"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929v"></script>
-  <link href="css/app.1aedfee5.css?v=20260929v" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929w"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929w"></script>
+  <link href="css/app.1aedfee5.css?v=20260929w" rel="stylesheet">
 </head>
 <body>
   <div id="app"></div>
@@ -31,65 +31,9 @@ setTimeout(function() {
   document.body.style.overflow = 'auto';
 }, 10000);
 
-// 让元素可拖动+缩放
-function makeDraggable(el, bg) {
-  el.style.cursor = 'move';
-  el.addEventListener('mousedown', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    var sx = e.clientX, sy = e.clientY;
-    var ol = el.offsetLeft, ot = el.offsetTop;
-    var ow = el.offsetWidth, oh = el.offsetHeight;
-
-    function move(ev) {
-      if (ev.shiftKey) {
-        // Shift+拖动 = 缩放
-        var nw = Math.max(30, ow + ev.clientX - sx);
-        var nh = Math.max(30, oh + ev.clientY - sy);
-        el.style.width = nw + 'px';
-        el.style.height = nh + 'px';
-        if (bg) { bg.style.width = nw + 4 + 'px'; bg.style.height = nh + 4 + 'px'; }
-      } else {
-        // 普通拖动
-        el.style.left = (ol + ev.clientX - sx) + 'px';
-        el.style.top = (ot + ev.clientY - sy) + 'px';
-        if (bg) { bg.style.left = el.style.left; bg.style.top = el.style.top; }
-      }
-    }
-    function up() {
-      document.removeEventListener('mousemove', move);
-      document.removeEventListener('mouseup', up);
-    }
-    document.addEventListener('mousemove', move);
-    document.addEventListener('mouseup', up);
-  });
-}
-
 // 等动画加载后初始化叠加元素
 function initOverlays() {
-  var container = document.querySelector('.contact_animation');
-  if (!container) { setTimeout(initOverlays, 500); return; }
-  container.style.position = 'relative';
-
-  if (container.querySelector('.my-sticker')) return;
-
-  var stickers = [
-    {left:'20%', top:'40%', w:'9%', h:'12%', rotate:'-4deg', img:'img/my_sticker_0.png'},
-    {left:'33%', top:'37%', w:'10%', h:'13%', rotate:'2deg', img:'img/my_sticker_1.png'},
-    {left:'53%', top:'41%', w:'10%', h:'13%', rotate:'-2deg', img:'img/my_sticker_2.png'},
-  ];
-  stickers.forEach(function(pos) {
-    var bg = document.createElement('div');
-    bg.className = 'my-sticker';
-    bg.style.cssText = 'position:absolute;left:calc('+pos.left+' - 1%);top:calc('+pos.top+' - 1%);width:calc('+pos.w+' + 2%);height:calc('+pos.h+' + 2%);background:#f7f7f7;z-index:149;transform:rotate('+pos.rotate+');';
-    container.appendChild(bg);
-    var st = document.createElement('img');
-    st.className = 'my-sticker';
-    st.src = pos.img;
-    st.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:'+pos.w+';height:'+pos.h+';z-index:150;transform:rotate('+pos.rotate+');';
-    container.appendChild(st);
-    makeDraggable(st, bg);
-  });
+  // 不再添加便签覆盖
 }
 
 // 持续检查直到contact页面出现
