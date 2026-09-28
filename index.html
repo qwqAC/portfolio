@@ -18,16 +18,18 @@
   <div id="app"></div>
 
 <script>
-// 兜底：5 秒后强制隐藏 loading 屏（离线环境下原网站的 loading 等待逻辑可能不触发）
-setTimeout(function() {
-  var l = document.querySelector('.loading');
-  if (l) {
-    l.style.transition = 'opacity 0.8s';
-    l.style.opacity = '0';
-    setTimeout(function(){ l.style.display = 'none'; }, 800);
-  }
-  document.body.style.overflow = 'auto';
-}, 4000);
+// 仅在 file:// 本地打开时兜底隐藏 loading；https 线上让原网站自己的转场/加载逻辑正常工作
+if (location.protocol === 'file:') {
+  setTimeout(function() {
+    var l = document.querySelector('.loading');
+    if (l) {
+      l.style.transition = 'opacity 0.8s';
+      l.style.opacity = '0';
+      setTimeout(function(){ l.style.display = 'none'; }, 800);
+    }
+    document.body.style.overflow = 'auto';
+  }, 4000);
+}
 
 // 等动画加载后初始化叠加元素
 function initOverlays() {
