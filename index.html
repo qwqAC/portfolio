@@ -16,44 +16,27 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929b"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929b"></script>
-  <link href="css/app.1aedfee5.css?v=20260929b" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929c"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929c"></script>
+  <link href="css/app.1aedfee5.css?v=20260929c" rel="stylesheet">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <!-- 静态 loading：Vue 加载前立刻显示，加载完自动替换 -->
+    <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#171717;display:flex;justify-content:center;align-items:center;z-index:999999;">
+      <div style="color:#17f700;font-family:monospace;font-size:1.5rem;letter-spacing:.3rem;">LOADING</div>
+    </div>
+  </div>
 
 <script>
-// 首次加载：loading 出现后强制保持3秒，让转场动画被看到
-(function() {
-  var loadedAt = Date.now();
-  var observer = new MutationObserver(function() {
-    var l = document.querySelector('.loading');
-    if (!l) return;
-    var elapsed = Date.now() - loadedAt;
-    // 前3秒内，如果 Vue 试图隐藏 loading，强制拉回来
-    if (elapsed < 3000) {
-      var cs = getComputedStyle(l);
-      if (cs.display === 'none' || parseFloat(cs.opacity) < 0.5) {
-        l.style.display = '';
-        l.style.opacity = '';
-      }
-    }
-  });
-  observer.observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['style', 'class']});
-
-  // 3秒后停止拦截，让 Vue 正常控制
-  setTimeout(function() { observer.disconnect(); }, 3000);
-
-  // 8秒兜底
-  setTimeout(function() {
-    var l = document.querySelector('.loading');
-    if (l && getComputedStyle(l).display !== 'none') {
-      l.style.display = 'none';
-    }
-    document.body.style.overflow = 'auto';
-  }, 8000);
-})();
+// 8秒兜底
+setTimeout(function() {
+  var l = document.querySelector('.loading');
+  if (l && getComputedStyle(l).display !== 'none') {
+    l.style.display = 'none';
+  }
+  document.body.style.overflow = 'auto';
+}, 8000);
 
 // 等动画加载后初始化叠加元素
 function initOverlays() {
