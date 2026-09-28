@@ -16,9 +16,9 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929k"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929k"></script>
-  <link href="css/app.1aedfee5.css?v=20260929k" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929m"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929m"></script>
+  <link href="css/app.1aedfee5.css?v=20260929m" rel="stylesheet">
 </head>
 <body>
   <div id="app"></div>
@@ -37,28 +37,30 @@ function initOverlays() {
   if (!container) { setTimeout(initOverlays, 500); return; }
   container.style.position = 'relative';
 
-  var svg = document.querySelector('.contact_animation svg');
-  if (svg) {
-    svg.querySelectorAll('image').forEach(function(img) { img.style.display = 'none'; });
-  }
+  // 避免重复添加
+  if (container.querySelector('.my-sticker')) return;
 
   var stickers = [
     {left:'22.84%', top:'44.94%', w:'8.88%', h:'11.77%', rotate:'-5deg', img:'img/my_sticker_0.png'},
     {left:'33.70%', top:'42.96%', w:'9.97%', h:'12.97%', rotate:'-3deg', img:'img/my_sticker_1.png'},
     {left:'45.48%', top:'46.23%', w:'10.07%', h:'13.07%', rotate:'-2deg', img:'img/my_sticker_2.png'},
   ];
-  stickers.forEach(function(pos, i) {
+  stickers.forEach(function(pos) {
     var bg = document.createElement('div');
+    bg.className = 'my-sticker';
     bg.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:'+pos.w+';height:'+pos.h+';background:#f7f7f7;z-index:149;transform:rotate('+pos.rotate+');';
     container.appendChild(bg);
     var st = document.createElement('img');
+    st.className = 'my-sticker';
     st.src = pos.img;
     st.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:'+pos.w+';height:'+pos.h+';z-index:150;transform:rotate('+pos.rotate+');';
     container.appendChild(st);
   });
 }
 
-setTimeout(initOverlays, 4500);
+// 持续检查直到contact页面出现
+setTimeout(initOverlays, 2000);
+setInterval(initOverlays, 3000);
 </script>
 </body>
 </html>
