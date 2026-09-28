@@ -16,9 +16,9 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929t"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929t"></script>
-  <link href="css/app.1aedfee5.css?v=20260929t" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929u"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929u"></script>
+  <link href="css/app.1aedfee5.css?v=20260929u" rel="stylesheet">
 </head>
 <body>
   <div id="app"></div>
@@ -74,14 +74,14 @@ function initOverlays() {
   if (container.querySelector('.my-sticker')) return;
 
   var stickers = [
-    {left:'19%', top:'42%', w:'11%', h:'15%', rotate:'-3deg', img:'img/my_sticker_0.png'},
-    {left:'31%', top:'38%', w:'12%', h:'16%', rotate:'1deg', img:'img/my_sticker_1.png'},
-    {left:'50%', top:'43%', w:'12%', h:'16%', rotate:'-1deg', img:'img/my_sticker_2.png'},
+    {left:'18%', top:'38%', w:'13%', h:'18%', rotate:'-4deg', img:'img/my_sticker_0.png'},
+    {left:'32%', top:'35%', w:'13%', h:'18%', rotate:'2deg', img:'img/my_sticker_1.png'},
+    {left:'53%', top:'40%', w:'13%', h:'18%', rotate:'-2deg', img:'img/my_sticker_2.png'},
   ];
   stickers.forEach(function(pos) {
     var bg = document.createElement('div');
     bg.className = 'my-sticker';
-    bg.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:calc('+pos.w+' + 0.5%);height:calc('+pos.h+' + 0.5%);background:#f7f7f7;z-index:149;transform:rotate('+pos.rotate+');';
+    bg.style.cssText = 'position:absolute;left:calc('+pos.left+' - 1%);top:calc('+pos.top+' - 1%);width:calc('+pos.w+' + 2%);height:calc('+pos.h+' + 2%);background:#f7f7f7;z-index:149;transform:rotate('+pos.rotate+');';
     container.appendChild(bg);
     var st = document.createElement('img');
     st.className = 'my-sticker';
