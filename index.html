@@ -16,22 +16,44 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929"></script>
-  <link href="css/app.1aedfee5.css?v=20260929" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929b"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929b"></script>
+  <link href="css/app.1aedfee5.css?v=20260929b" rel="stylesheet">
 </head>
 <body>
   <div id="app"></div>
 
 <script>
-// 兜底：8秒后如果 loading 还在，强制隐藏（不干扰Vue正常转场）
-setTimeout(function() {
-  var l = document.querySelector('.loading');
-  if (l && getComputedStyle(l).display !== 'none') {
-    l.style.display = 'none';
-  }
-  document.body.style.overflow = 'auto';
-}, 8000);
+// 首次加载：loading 出现后强制保持3秒，让转场动画被看到
+(function() {
+  var loadedAt = Date.now();
+  var observer = new MutationObserver(function() {
+    var l = document.querySelector('.loading');
+    if (!l) return;
+    var elapsed = Date.now() - loadedAt;
+    // 前3秒内，如果 Vue 试图隐藏 loading，强制拉回来
+    if (elapsed < 3000) {
+      var cs = getComputedStyle(l);
+      if (cs.display === 'none' || parseFloat(cs.opacity) < 0.5) {
+        l.style.display = '';
+        l.style.opacity = '';
+      }
+    }
+  });
+  observer.observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['style', 'class']});
+
+  // 3秒后停止拦截，让 Vue 正常控制
+  setTimeout(function() { observer.disconnect(); }, 3000);
+
+  // 8秒兜底
+  setTimeout(function() {
+    var l = document.querySelector('.loading');
+    if (l && getComputedStyle(l).display !== 'none') {
+      l.style.display = 'none';
+    }
+    document.body.style.overflow = 'auto';
+  }, 8000);
+})();
 
 // 等动画加载后初始化叠加元素
 function initOverlays() {
