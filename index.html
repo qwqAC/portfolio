@@ -16,39 +16,40 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929h"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929h"></script>
-  <link href="css/app.1aedfee5.css?v=20260929h" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929i"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929i"></script>
+  <link href="css/app.1aedfee5.css?v=20260929i" rel="stylesheet">
 </head>
 <body>
   <div id="app"></div>
 
 <script>
-// 首次加载：等Vue创建.loading后，延迟2秒再让它消失
-// 这样绿色块滑动动画能完整播放
+// 首次加载：3秒内阻止Vue隐藏loading，3.5秒后强制隐藏
 (function() {
   var startTime = Date.now();
-  var loadingEl = null;
+  var observer = null;
 
   function watchLoading() {
     var l = document.querySelector('.loading');
-    if (!l) {
-      setTimeout(watchLoading, 50);
-      return;
-    }
-    loadingEl = l;
+    if (!l) { setTimeout(watchLoading, 50); return; }
 
-    new MutationObserver(function(muts) {
+    observer = new MutationObserver(function() {
       var elapsed = Date.now() - startTime;
-      // 前3秒内，阻止Vue隐藏loading
-      if (elapsed < 3000) {
-        if (l.style.display === 'none') {
-          l.style.display = '';
-        }
+      if (elapsed < 3000 && l.style.display === 'none') {
+        l.style.display = '';
       }
-    }).observe(l, {attributes: true, attributeFilter: ['style']});
+    });
+    observer.observe(l, {attributes: true, attributeFilter: ['style']});
   }
   watchLoading();
+
+  // 3.5秒后：断开观察者，强制隐藏loading
+  setTimeout(function() {
+    if (observer) observer.disconnect();
+    var l = document.querySelector('.loading');
+    if (l) l.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }, 3500);
 
   // 8秒兜底
   setTimeout(function() {
