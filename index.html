@@ -18,39 +18,16 @@
   <div id="app"></div>
 
 <script>
-// 初始加载兜底：file:// 本地直接 4 秒隐藏
-if (location.protocol === 'file:') {
-  setTimeout(function() {
-    var l = document.querySelector('.loading');
-    if (l) {
-      l.style.transition = 'opacity 0.8s';
-      l.style.opacity = '0';
-      setTimeout(function(){ l.style.display = 'none'; }, 800);
-    }
-    document.body.style.overflow = 'auto';
-  }, 4000);
-}
-
-// 监听 loading：转场时看门狗 2.5 秒后自动淡出，淡出后清空所有内联样式
-var _loadTimer = null;
-new MutationObserver(function() {
+// 3 秒后隐藏 loading（不管 file:// 还是 https）
+setTimeout(function() {
   var l = document.querySelector('.loading');
-  if (!l) return;
-  var cs = getComputedStyle(l);
-  if (cs.display === 'flex' && parseFloat(cs.opacity) > 0.5) {
-    if (_loadTimer) clearTimeout(_loadTimer);
-    _loadTimer = setTimeout(function() {
-      if (!l) return;
-      l.style.transition = 'opacity 0.6s';
-      l.style.opacity = '0';
-      setTimeout(function() {
-        if (l) { l.style.cssText = ''; }
-        document.body.style.overflow = 'auto';
-      }, 600);
-    }, 2500);
+  if (l) {
+    l.style.transition = 'opacity 0.8s';
+    l.style.opacity = '0';
+    setTimeout(function(){ l.style.display = 'none'; }, 800);
   }
-}).observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['style', 'class']});
-
+  document.body.style.overflow = 'auto';
+}, 3000);
 
 // 等动画加载后初始化叠加元素
 function initOverlays() {
