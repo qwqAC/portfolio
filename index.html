@@ -18,17 +18,6 @@
   <div id="app"></div>
 
 <script>
-// 3 秒后隐藏 loading（不管 file:// 还是 https）
-setTimeout(function() {
-  var l = document.querySelector('.loading');
-  if (l) {
-    l.style.transition = 'opacity 0.8s';
-    l.style.opacity = '0';
-    setTimeout(function(){ l.style.display = 'none'; }, 800);
-  }
-  document.body.style.overflow = 'auto';
-}, 3000);
-
 // 等动画加载后初始化叠加元素
 function initOverlays() {
   var container = document.querySelector('.contact_animation');
