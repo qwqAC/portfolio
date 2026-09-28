@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="189" height="18" viewBox="0 0 189 18">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #17f700;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 4.43px;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <path id="line_拷贝" data-name="line 拷贝" class="cls-1" d="M2.791,10.784l183.042-6L28.8,14.782l138.032-12L54.8,15.782l101.023-2"/>
+</svg>
