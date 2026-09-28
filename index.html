@@ -16,75 +16,61 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929i"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929i"></script>
-  <link href="css/app.1aedfee5.css?v=20260929i" rel="stylesheet">
+  <link href="css/app.1aedfee5.css?v=20260929j" rel="stylesheet">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <!-- 静态 loading：保证2秒可见 -->
+    <div class="preload" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#171717;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:999999;">
+      <div style="width:50px;height:50px;background:#fff;animation:spin360 1s linear infinite;border-radius:4px;"></div>
+      <div style="color:#17f700;font-family:monospace;font-size:.9rem;letter-spacing:.3rem;margin-top:1.2rem;">LOADING</div>
+    </div>
+  </div>
+  <style>@keyframes spin360{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
 
 <script>
-// 首次加载：3秒内阻止Vue隐藏loading，3.5秒后强制隐藏
-(function() {
-  var startTime = Date.now();
-  var observer = null;
+// 2秒后移除静态loading，动态加载Vue
+setTimeout(function() {
+  var p = document.querySelector('.preload');
+  if (p) p.remove();
 
-  function watchLoading() {
-    var l = document.querySelector('.loading');
-    if (!l) { setTimeout(watchLoading, 50); return; }
+  var s1 = document.createElement('script');
+  s1.src = 'js/chunk-vendors.80e23a73.js?v=20260929j';
+  s1.onload = function() {
+    var s2 = document.createElement('script');
+    s2.src = 'js/app.fc5bab1d.js?v=20260929j';
+    document.body.appendChild(s2);
+  };
+  document.body.appendChild(s1);
+}, 2000);
 
-    observer = new MutationObserver(function() {
-      var elapsed = Date.now() - startTime;
-      if (elapsed < 3000 && l.style.display === 'none') {
-        l.style.display = '';
-      }
-    });
-    observer.observe(l, {attributes: true, attributeFilter: ['style']});
-  }
-  watchLoading();
-
-  // 3.5秒后：断开观察者，强制隐藏loading
-  setTimeout(function() {
-    if (observer) observer.disconnect();
-    var l = document.querySelector('.loading');
-    if (l) l.style.display = 'none';
-    document.body.style.overflow = 'auto';
-  }, 3500);
-
-  // 8秒兜底
-  setTimeout(function() {
-    var l = document.querySelector('.loading');
-    if (l && getComputedStyle(l).display !== 'none') {
-      l.style.display = 'none';
-    }
-    document.body.style.overflow = 'auto';
-  }, 8000);
-})();
+// 10秒兜底
+setTimeout(function() {
+  var l = document.querySelector('.loading');
+  if (l && getComputedStyle(l).display !== 'none') l.style.display = 'none';
+  document.body.style.overflow = 'auto';
+}, 10000);
 
 // 等动画加载后初始化叠加元素
 function initOverlays() {
   var container = document.querySelector('.contact_animation');
   if (!container) { setTimeout(initOverlays, 500); return; }
   container.style.position = 'relative';
-  
-  // 删除旧的 image
+
   var svg = document.querySelector('.contact_animation svg');
   if (svg) {
     svg.querySelectorAll('image').forEach(function(img) { img.style.display = 'none'; });
   }
-  
-  // 三个便签 - 直接显示保存好的图片
+
   var stickers = [
     {left:'22.84%', top:'44.94%', w:'8.88%', h:'11.77%', rotate:'-5deg', img:'img/my_sticker_0.png'},
     {left:'33.70%', top:'42.96%', w:'9.97%', h:'12.97%', rotate:'-3deg', img:'img/my_sticker_1.png'},
     {left:'45.48%', top:'46.23%', w:'10.07%', h:'13.07%', rotate:'-2deg', img:'img/my_sticker_2.png'},
   ];
   stickers.forEach(function(pos, i) {
-    // 白色底遮住原来的便签
     var bg = document.createElement('div');
     bg.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:'+pos.w+';height:'+pos.h+';background:#f7f7f7;z-index:149;transform:rotate('+pos.rotate+');';
     container.appendChild(bg);
-    // 用户写的便签
     var st = document.createElement('img');
     st.src = pos.img;
     st.style.cssText = 'position:absolute;left:'+pos.left+';top:'+pos.top+';width:'+pos.w+';height:'+pos.h+';z-index:150;transform:rotate('+pos.rotate+');';
@@ -92,35 +78,7 @@ function initOverlays() {
   });
 }
 
-function makeMovable(el) {
-  el.style.cursor = 'move';
-  el.addEventListener('mousedown', function(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    var startX = e.clientX, startY = e.clientY;
-    var origLeft = el.offsetLeft, origTop = el.offsetTop;
-    var origW = el.offsetWidth, origH = el.offsetHeight;
-    
-    function onMove(ev) {
-      // 如果按 Shift 键则缩放，否则移动
-      if (ev.shiftKey) {
-        el.style.width = Math.max(20, origW + ev.clientX - startX) + 'px';
-        el.style.height = Math.max(20, origH + ev.clientY - startY) + 'px';
-      } else {
-        el.style.left = (origLeft + ev.clientX - startX) + 'px';
-        el.style.top = (origTop + ev.clientY - startY) + 'px';
-      }
-    }
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
-}
-
-setTimeout(initOverlays, 4500);
+setTimeout(initOverlays, 5000);
 </script>
 </body>
 </html>
