@@ -18,7 +18,7 @@
   <div id="app"></div>
 
 <script>
-// 仅在 file:// 本地打开时兜底隐藏 loading；https 线上让原网站自己的转场/加载逻辑正常工作
+// 初始加载兜底：file:// 本地直接 4 秒隐藏
 if (location.protocol === 'file:') {
   setTimeout(function() {
     var l = document.querySelector('.loading');
@@ -30,6 +30,24 @@ if (location.protocol === 'file:') {
     document.body.style.overflow = 'auto';
   }, 4000);
 }
+
+// 看门狗：转场 LOADING 最多显示 3 秒，避免卡住
+setInterval(function() {
+  var l = document.querySelector('.loading');
+  if (!l) return;
+  var cs = getComputedStyle(l);
+  if (cs.display !== 'none' && parseFloat(cs.opacity) > 0.5) {
+    setTimeout(function() {
+      if (l && getComputedStyle(l).display !== 'none') {
+        l.style.transition = 'opacity 0.5s';
+        l.style.opacity = '0';
+        setTimeout(function(){ l.style.display = 'none'; }, 500);
+        document.body.style.overflow = 'auto';
+      }
+    }, 3000);
+  }
+}, 1500);
+
 
 // 等动画加载后初始化叠加元素
 function initOverlays() {
