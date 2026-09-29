@@ -16,9 +16,9 @@
   <link rel="preload" href="img/my_sticker_0.png" as="image">
   <link rel="preload" href="img/my_sticker_1.png" as="image">
   <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929w"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929w"></script>
-  <link href="css/app.1aedfee5.css?v=20260929w" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929y"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929y"></script>
+  <link href="css/app.1aedfee5.css?v=20260929y" rel="stylesheet">
 </head>
 <body>
   <div id="app"></div>
@@ -33,7 +33,13 @@ setTimeout(function() {
 
 // 等动画加载后初始化叠加元素
 function initOverlays() {
-  // 不再添加便签覆盖
+  // 隐藏便签上所有图片和小字，只留白色便签纸
+  var svg = document.querySelector('.contact_animation svg');
+  if (svg) {
+    svg.querySelectorAll('image').forEach(function(img) {
+      img.style.display = 'none';
+    });
+  }
 }
 
 // 持续检查直到contact页面出现
