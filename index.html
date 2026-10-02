@@ -5,7 +5,6 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, mustigate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Chong | 视觉设计者</title>
   <meta name="description" content="阿冲,视觉设计者:包括网站、平面、视频、和交互设计">
@@ -13,38 +12,273 @@
   <link rel="icon" href="meta/favicon_32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="meta/favicon_64.png" sizes="64x64" type="image/png">
   <link rel="apple-touch-icon" href="meta/favicon_180.png" sizes="180x180">
-  <link rel="preload" href="img/my_sticker_0.png" as="image">
-  <link rel="preload" href="img/my_sticker_1.png" as="image">
-  <link rel="preload" href="img/my_sticker_2.png" as="image">
-  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20260929y"></script>
-  <script defer="defer" src="js/app.fc5bab1d.js?v=20260929y"></script>
-  <link href="css/app.1aedfee5.css?v=20260929y" rel="stylesheet">
+  <script defer="defer" src="js/chunk-vendors.80e23a73.js?v=20261002c"></script>
+  <script defer="defer" src="js/app.fc5bab1d.js?v=20261002c"></script>
+  <link href="css/app.1aedfee5.css?v=20261002c" rel="stylesheet">
+  <style>
+    /* 手写便签贴纸：贴在 Lottie 动画容器内部，随容器一起出现/消失 */
+    #sticker_layer { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+    #sticker_layer .sticker {
+      position: absolute;
+      display: block;
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: 100% 100%;
+      transform-origin: 50% 50%;
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>
 
 <script>
-// 10秒兜底
-setTimeout(function() {
-  var l = document.querySelector('.loading');
-  if (l && getComputedStyle(l).display !== 'none') l.style.display = 'none';
-  document.body.style.overflow = 'auto';
-}, 10000);
+(function () {
+  'use strict';
 
-// 等动画加载后初始化叠加元素
-function initOverlays() {
-  // 隐藏便签上所有图片和小字，只留白色便签纸
-  var svg = document.querySelector('.contact_animation svg');
-  if (svg) {
-    svg.querySelectorAll('image').forEach(function(img) {
-      img.style.display = 'none';
+  /* ============================================================
+     contact 页的三张便签 = Lottie 图层 email / wechat / whatsapp
+     （动画画布 650×520，以下坐标全部是该画布坐标，已从动画数据实测）
+       cx,cy  = 纸面中心
+       w,h    = 纸面宽高
+       rot    = 纸面自身的倾斜角（度）
+       tx,ty  = 要隐藏的"旧文字"分组在图层 shapes 里的下标
+     ============================================================ */
+  var NOTES = [
+    { src: 'QR/sticker_0.png', label: 'Gmail',    cx: 178, cy: 316, w: 58, h: 66, rot: -2,  hide: { email: [1, 2] },    paper: { x: 0.0000, y: 0.1225, w: 1.0000, h: 0.7550 } },
+    { src: 'QR/sticker_2.png', label: 'WhatsApp', cx: 250, cy: 310, w: 65, h: 72, rot: 1,   hide: { whatsapp: [1, 2] }, paper: { x: 0.0000, y: 0.2166, w: 1.0000, h: 0.5657 } },
+    { src: 'QR/sticker_1.png', label: 'WeChat',   cx: 328, cy: 328, w: 66, h: 73, rot: 3,   hide: { wechat: [1, 2] },   paper: { x: 0.0000, y: 0.1719, w: 1.0000, h: 0.6549 } }
+  ];
+  var VB = { w: 650, h: 520 };      /* Lottie 画布尺寸 */
+  var PAPER_PAD = 1.01;             /* 白纸比便签纸面放大 1%，足够盖住又不外溢 */
+
+  var els = [];
+  var layer = null;
+  var hiddenSvg = null;
+
+  /* ---------- 1. 隐藏三张便签上的旧文字（改动画数据，不碰 DOM） ---------- */
+  function patchNotes(data) {
+    if (!data || !data.assets) return 0;
+    var n = 0;
+    data.assets.forEach(function (a) {
+      if (!a.layers) return;
+      a.layers.forEach(function (L) {
+        var want = null;
+        NOTES.forEach(function (N) { if (N.hide[L.nm]) want = N.hide[L.nm]; });
+        if (!want) return;
+        (L.shapes || []).forEach(function (g, i) {
+          if (want.indexOf(i) === -1) return;
+          (function walk(shapes) {
+            (shapes || []).forEach(function (sh) {
+              if (sh.ty === 'gr') walk(sh.it);
+              else if (sh.ty === 'fl' && sh.o && typeof sh.o.k === 'number') { sh.o.k = 0; n++; }
+            });
+          })([g]);
+        });
+      });
+    });
+    if (n) console.log('[stickerCal] 已隐藏便签上的旧文字：' + n + ' 个填充');
+    return n;
+  }
+
+  /* 拦一次动画数据的 JSON.parse，趁机改数据，再放行（只拦一次，不影响其它动画） */
+  (function hookParse() {
+    var raw = JSON.parse;
+    JSON.parse = function (text) {
+      var out = raw.apply(this, arguments);
+      try {
+        if (typeof text === 'string' && text.indexOf('"nm":"contact"') >= 0) {
+          window.__patched = patchNotes(out);
+          console.log('[stickerCal] 动画数据补丁：隐藏旧文字填充 ' + window.__patched + ' 个');
+        }
+      } catch (e) {}
+      return out;
+    };
+  })();
+
+  /* ---------- 1b. 兜底：直接改渲染出来的 SVG（万一数据拦截没赶上） ---------- */
+  function domHide(svg) {
+    var groups = svg.querySelectorAll('g');
+    var hit = 0;
+    for (var i = 0; i < groups.length; i++) {
+      var g = groups[i];
+      var nm = (g.getAttribute('data-nm') || '').replace(/["“”]/g, '').trim();
+      var want = null;
+      NOTES.forEach(function (N) { if (N.hide[nm]) want = N.hide[nm]; });
+      if (!want) continue;                        /* 只在 email / wechat / whatsapp 图层里找 */
+      var kids = g.children;
+      for (var k = 0; k < kids.length; k++) {
+        var child = kids[k];
+        var cn = (child.getAttribute && child.getAttribute('data-nm') || '').replace(/["“”]/g, '').trim();
+        var idx = parseInt(cn.replace(/[^0-9]/g, ''), 10);
+        if (want.indexOf(idx) !== -1) { child.style.display = 'none'; hit++; }
+      }
+    }
+    if (hit) console.log('[stickerCal] 已在 SVG 上隐藏旧文字分组：' + hit);
+    return hit;
+  }
+
+  /* ---------- 2. 动态检测白色便签位置，贴上去 ---------- */
+  var STICKER_SRC = ['QR/sticker_0_trans.png', 'QR/sticker_2_trans.png', 'QR/sticker_1_trans.png'];
+  var ROT_BY_INDEX = [-2, 1, 3];
+
+  function pickSvg() { return document.querySelector('.contact_animation svg'); }
+
+  function removeStickers() {
+    if (layer && layer.parentNode) layer.parentNode.removeChild(layer);
+    layer = null; els = [];
+  }
+
+  function buildStickers(host) {
+    var old = document.querySelectorAll('#sticker_layer');
+    for (var i = 0; i < old.length; i++) if (old[i].parentNode) old[i].parentNode.removeChild(old[i]);
+    layer = document.createElement('div');
+    layer.id = 'sticker_layer';
+    els = [];
+    for (var i = 0; i < 3; i++) {
+      var d = document.createElement('div');
+      d.className = 'sticker';
+      d.style.backgroundImage = 'url("' + STICKER_SRC[i] + '")';
+      layer.appendChild(d);
+      els.push(d);
+    }
+    host.appendChild(layer);
+  }
+
+  // 三个大便签在 SVG viewBox 中的相对位置（650×520 坐标系）
+  var NOTES_REL = [
+    {x: 0.227, y: 0.455, w: 0.089, h: 0.105, rot: -2},  // Email/Gmail
+    {x: 0.336, y: 0.437, w: 0.100, h: 0.116, rot: 1},   // WhatsApp
+    {x: 0.455, y: 0.466, w: 0.101, h: 0.117, rot: 3}    // WeChat
+  ];
+  var VB_W = 650, VB_H = 520;
+
+  function findWhiteNotes(svg) {
+    var sr = svg.getBoundingClientRect();
+    // 计算 preserveAspectRatio="xMidYMid meet" 的实际内容区域
+    var scale = Math.min(sr.width / VB_W, sr.height / VB_H);
+    var contentW = VB_W * scale;
+    var contentH = VB_H * scale;
+    var offsetX = (sr.width - contentW) / 2;
+    var offsetY = (sr.height - contentH) / 2;
+    return NOTES_REL.map(function(n) {
+      return {
+        x: sr.left + offsetX + n.x * contentW,
+        y: sr.top + offsetY + n.y * contentH,
+        w: n.w * contentW,
+        h: n.h * contentH
+      };
     });
   }
-}
 
-// 持续检查直到contact页面出现
-setTimeout(initOverlays, 2000);
-setInterval(initOverlays, 3000);
+  // 隐藏 SVG 里的图片（二维码占位图）
+  function hideImages(svg) {
+    svg.querySelectorAll('image').forEach(function(img) { img.style.display = 'none'; });
+  }
+
+  function place() {
+    var svg = pickSvg();
+    if (!svg || !svg.parentNode) { removeStickers(); return false; }
+    var sr = svg.getBoundingClientRect();
+    if (!sr.width || !sr.height) return false;
+    var host = svg.parentNode;
+    var hr = host.getBoundingClientRect();
+
+    if (!layer || layer.parentNode !== host) buildStickers(host);
+
+    layer.style.left = (sr.left - hr.left) + 'px';
+    layer.style.top = (sr.top - hr.top) + 'px';
+    layer.style.width = sr.width + 'px';
+    layer.style.height = sr.height + 'px';
+
+    hideImages(svg);
+    var notes = findWhiteNotes(svg);
+    if (notes.length < 3) return false;
+
+    for (var i = 0; i < 3; i++) {
+      var n = notes[i];
+      var el = els[i];
+      if (!el) continue;
+      // 贴纸缩小到便签的85%，居中
+      var pad = 0;
+      var sx = n.w * 0.85;
+      var sy = n.h * 0.85;
+      el.style.left = (n.x + (n.w - sx) / 2 - sr.left) + 'px';
+      el.style.top = (n.y + (n.h - sy) / 2 - sr.top) + 'px';
+      el.style.width = sx + 'px';
+      el.style.height = sy + 'px';
+      el.style.transform = 'rotate(' + NOTES_REL[i].rot + 'deg)';
+      el.style.backgroundSize = '100% 100%';
+      el.style.backgroundPosition = 'center center';
+    }
+    return true;
+  }
+
+  /* ---------- 控制台工具 ---------- */
+  /* 逐张打印：代码算出的数值 vs 浏览器实际渲染的数值（排查偏差用） */
+  window.stickerDiff = function () {
+    var svg = pickSvg();
+    if (!svg) return 'no svg';
+    var sr = svg.getBoundingClientRect();
+    var s = Math.min(sr.width / VB.w, sr.height / VB.h);
+    var rows = NOTES.map(function (n, i) {
+      var el = els[i];
+      var b = el ? el.getBoundingClientRect() : null;
+      var pw = n.w * s * PAPER_PAD, ph = n.h * s * PAPER_PAD;
+      var side = Math.max(pw / n.paper.w, ph / n.paper.h);
+      return {
+        label: n.label,
+        s: +s.toFixed(4),
+        wantPaper: Math.round(pw) + 'x' + Math.round(ph),
+        wantSide: +side.toFixed(1),
+        styleW: el ? el.style.width : null,
+        offW: el ? el.offsetWidth : null,
+        bgSize: el ? el.style.backgroundSize : null,
+        bgPos: el ? el.style.backgroundPosition : null,
+        rect: b ? [Math.round(b.left), Math.round(b.top), Math.round(b.width), Math.round(b.height)] : null
+      };
+    });
+    console.log('[stickerDiff] ' + JSON.stringify(rows, null, 1));
+    return rows;
+  };
+  window.stickerCal = function () {
+    var svg = pickSvg();
+    if (!svg) return '当前不在 contact 页（贴纸应当不显示）';
+    var sr = svg.getBoundingClientRect();
+    var s = Math.min(sr.width / VB.w, sr.height / VB.h);
+    var out = {
+      svgRect: { w: Math.round(sr.width), h: Math.round(sr.height) },
+      scale: +s.toFixed(4),
+      canvas: VB,
+      stickers: NOTES.map(function (n, i) {
+        return { label: n.label, screenX: Math.round(n.cx * s), screenY: Math.round(n.cy * s), paper: Math.round(n.w * s) + 'x' + Math.round(n.h * s), rot: n.rot };
+      })
+    };
+    console.log('[stickerCal] ' + JSON.stringify(out));
+    return out;
+  };
+  window.stickerInset = function (k) { PAPER_PAD = k || 1.06; place(); return 'PAPER_PAD = ' + PAPER_PAD; };
+  window.stickerMove = function (i, dx, dy) {
+    if (!NOTES[i]) return '0=email 1=wechat 2=whatsapp';
+    NOTES[i].cx += dx || 0; NOTES[i].cy += dy || 0; place();
+    return NOTES.map(function (n) { return { label: n.label, cx: +n.cx.toFixed(1), cy: +n.cy.toFixed(1) }; });
+  };
+  window.stickerRot = function (i, deg) {
+    if (!NOTES[i]) return '0=email 1=wechat 2=whatsapp';
+    NOTES[i].rot = deg || 0; place();
+    return NOTES[i].label + ' rot=' + NOTES[i].rot;
+  };
+
+  function tick() { place(); }
+  tick();
+  setInterval(tick, 400);
+  window.addEventListener('resize', place);
+  window.addEventListener('scroll', place, true);
+  document.addEventListener('DOMContentLoaded', place);
+  if (window.MutationObserver) {
+    new MutationObserver(function () { place(); })
+      .observe(document.documentElement, { childList: true, subtree: true });
+  }
+})();
 </script>
 </body>
 </html>
